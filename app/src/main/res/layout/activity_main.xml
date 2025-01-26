@@ -63,6 +63,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/guideline_top" />
 
+
+    <!-- TextView для отображения оставшегося времени до гипогликемии -->
+    <TextView
+        android:id="@+id/hypoglycemiaTimeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_red_dark"
+        app:layout_constraintTop_toBottomOf="@id/lineChart"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/guideline_buttons_bottom" />
+
     <!-- Нижняя направляющая для табличек -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_tables_top"
