@@ -49,6 +49,11 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
     private lateinit var handler: Handler
     private lateinit var iobRunnable: Runnable
 
+    private var prevTinsulin: Float? = null
+    private var prevTargetBG: Float? = null
+    private var prevIsf: Float? = null
+    private var prevIcRatio: Float? = null
+
     // Определяем переменную dateFormat
     private val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
@@ -64,14 +69,15 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         dataSet = LineDataSet(entries, "")
         dataSet.setDrawValues(true)
         dataSet.setDrawCircles(true)  // Показываем только точки
-        dataSet.lineWidth = 0f  // Убираем соединяющие линии
+        dataSet.setDrawValues(false)  // Не отображаем значения рядом с точками
+        dataSet.lineWidth = 2f  // Устанавливаем ширину линии
+        dataSet.setColor(Color.parseColor("#FF00FF"))  // Устанавливаем цвет линии (сиреневый)
         dataSet.circleRadius = 5f  // Устанавливаем размер круга
         dataSet.circleHoleRadius = 2.5f
         dataSet.setCircleColor(Color.MAGENTA)  // Устанавливаем цвет точки
 
         lineChart.description.isEnabled = false
         lineChart.description.text = ""
-
 
         val lineData = LineData(dataSet)
 
@@ -82,9 +88,8 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
         // Настраиваем ось X
         val xAxis = lineChart.xAxis
-        val currentTimeMillis = System.currentTimeMillis()
         xAxis.position = XAxis.XAxisPosition.BOTTOM
-        xAxis.valueFormatter = TimeValueFormatter(currentTimeMillis)
+        xAxis.valueFormatter = TimeValueFormatter(System.currentTimeMillis())
         xAxis.setAvoidFirstLastClipping(true)
         xAxis.granularity = 3600000f  // Шаг в один час (3600000 миллисекунд)
         xAxis.labelRotationAngle = -45f
@@ -92,18 +97,11 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         lineChart.isDragEnabled = true
         lineChart.setScaleEnabled(true)
         lineChart.setPinchZoom(true)
-
         lineChart.setTouchEnabled(true)
         lineChart.isScaleXEnabled = true
         lineChart.isScaleYEnabled = true
         lineChart.setDragOffsetX(10f) // Небольшой отступ для прокрутки
         lineChart.setDragOffsetY(10f)
-
-
-
-        // Добавляем пунктирные линии для y=11 и y=4
-        addLimitLine(11f, "", Color.YELLOW, true)
-        addLimitLine(4f, "", Color.YELLOW, true)
 
         lineChart.data = lineData
         lineChart.invalidate() // Обновляем график
@@ -136,6 +134,9 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
         // Найдем кнопку Forecast
         forecastButton = findViewById(R.id.forecastButton)
+        forecastButton.setOnClickListener {
+            calculateForecast()
+        }
         forecastButton.isEnabled = false // По умолчанию кнопка отключена
 
         // Получаем текстовые поля для параметров
@@ -157,12 +158,13 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
             handler.postDelayed(iobRunnable, 30000) // Запускать каждые 30 секунд
         }
         handler.post(iobRunnable)
+
+        // Активируем кнопку добавления болюса
         addBolusButton = findViewById(R.id.addBolusButton)
         addBolusButton.setOnClickListener {
             val currentTime = System.currentTimeMillis().toFloat()
             addDiamondMarkerToChart(currentTime)
         }
-
     }
 
     private fun calculateIOB() {
@@ -174,7 +176,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
             val insulinEffect = integrateInsulinEffect(tbolus, currentTimeMillis, bolus, tinsulin)
             iob = bolus - insulinEffect
         } else {
-            iob = 0f
+            iob = 10F
         }
 
         // Обновляем значение IOB на экране
@@ -185,6 +187,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         val duration = (end - start).toFloat() / (60 * 60 * 1000) // Длительность в часах
         return bolus * (duration / tinsulin) // Простая линейная модель
     }
+
 
 
 
@@ -212,11 +215,18 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         dataSet.notifyDataSetChanged()
         lineChart.data.notifyDataChanged()
         lineChart.notifyDataSetChanged()
+
+        // Устанавливаем видимый диапазон так, чтобы текущая точка была в центре
+        lineChart.setVisibleXRangeMaximum(3600000f) // Отображаем 2 часа по оси X
+        lineChart.moveViewToX(currentTime - 3600000f) // Смещаем график так, чтобы текущая точка была в центре
+
         lineChart.invalidate() // Перерисовываем график
 
         // Обновляем вертикальную линию для текущего времени
         updateVerticalLine()
     }
+
+
 
     private fun updateVerticalLine() {
         // Удаляем предыдущую вертикальную линию
@@ -239,10 +249,18 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
     }
 
     override fun onParameterInput(tinsulin: Float, targetBG: Float, isf: Float, icRatio: Float) {
-        this.tinsulin = tinsulin
-        this.targetBG = targetBG
-        this.isf = isf
-        this.icRatio = icRatio
+        // Сохраняем предыдущие значения, если новые значения не нулевые
+        prevTinsulin = tinsulin.takeIf { it != 0f } ?: prevTinsulin
+        prevTargetBG = targetBG.takeIf { it != 0f } ?: prevTargetBG
+        prevIsf = isf.takeIf { it != 0f } ?: prevIsf
+        prevIcRatio = icRatio.takeIf { it != 0f } ?: prevIcRatio
+
+        // Используем предыдущие значения, если новые значения нулевые
+        this.tinsulin = tinsulin.takeIf { it != 0f } ?: prevTinsulin ?: 0f
+        this.targetBG = targetBG.takeIf { it != 0f } ?: prevTargetBG
+        this.isf = isf.takeIf { it != 0f } ?: prevIsf ?: 0f
+        this.icRatio = icRatio.takeIf { it != 0f } ?: prevIcRatio ?: 0f
+
         Toast.makeText(this, "Параметры сохранены", Toast.LENGTH_SHORT).show()
 
         // Удаляем предыдущую линию TargetBG, если она существует
@@ -258,13 +276,13 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         lineChart.invalidate() // Перерисовываем график
 
         // Обновляем текстовые поля с параметрами
-        tinsulinValueTextView.text = tinsulin.toString()
-        targetBGValueTextView.text = targetBG.toString()
-        isfValueTextView.text = isf.toString()
-        icRatioValueTextView.text = icRatio.toString()
+        tinsulinValueTextView.text = this.tinsulin.toString()
+        targetBGValueTextView.text = this.targetBG.toString()
+        isfValueTextView.text = this.isf.toString()
+        icRatioValueTextView.text = this.icRatio.toString()
 
         // Проверяем условия для кнопки Forecast
-        if (bgValue < targetBG && bgValue > 3.9) {
+        if (bgValue < targetBG!! && bgValue > 3.9) {
             forecastButton.isEnabled = true
         } else {
             forecastButton.isEnabled = false
@@ -273,6 +291,8 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         // Проверяем условия для кнопки Bolus calculation
         bolusCalculationButton.isEnabled = allParametersEntered()
     }
+
+
 
     override fun onBolusCalculation(carbs: Float, bg: Float) {
         // Расчет болюса
@@ -350,6 +370,38 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
     }
 
 
+    private fun calculateForecast() {
+        val currentTime = System.currentTimeMillis().toFloat()
+        val forecastEntries = ArrayList<Entry>()
+        val deltaT = 60000f // Интервал в одну минуту (60 000 миллисекунд)
+        var time = currentTime
+        var pBG = bgValue
+        var pIOB = iob
 
+        // Прогноз на 2 часа вперед (120 точек с интервалом 1 минута)
+        for (i in 0..120) {
+            forecastEntries.add(Entry(time, pBG))
+
+            // Расчет следующей точки
+            pBG -= isf * pIOB
+            time += deltaT
+            pIOB = bolus - integrateInsulinEffect(tbolus, time.toLong(), bolus, tinsulin)
+        }
+
+        // Создаем DataSet для прогноза
+        val forecastDataSet = LineDataSet(forecastEntries, "Forecast").apply {
+            lineWidth = 2f
+            color = Color.GREEN
+            setDrawCircles(false)
+            setDrawValues(false)
+            enableDashedLine(10f, 10f, 0f) // Пунктирная линия
+        }
+
+        // Добавляем DataSet с прогнозом в данные графика
+        lineChart.data.addDataSet(forecastDataSet)
+        lineChart.data.notifyDataChanged()
+        lineChart.notifyDataSetChanged()
+        lineChart.invalidate()
+    }
 
 }
