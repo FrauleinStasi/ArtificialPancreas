@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Gb</string>
+    <string name="title_activity_parameter_input_dialog_fragment">ParameterInputDialogFragment
+    </string>
+    <string name="title_activity_bginput_dialog_fragment">BGInputDialogFragment</string>
+    <string name="title_activity_bolus_calculation_dialog_fragment">BolusCalculationDialogFragment
+    </string>
+</resources>

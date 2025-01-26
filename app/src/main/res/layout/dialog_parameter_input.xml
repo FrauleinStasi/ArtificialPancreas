@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <EditText
+        android:id="@+id/tinsulinInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Tinsulin" />
+
+    <EditText
+        android:id="@+id/targetBGInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="TargetBG" />
+
+    <EditText
+        android:id="@+id/isfInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="ISF" />
+
+    <EditText
+        android:id="@+id/icRatioInput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="ICRatio" />
+</LinearLayout>

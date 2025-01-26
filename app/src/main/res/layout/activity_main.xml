@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <!-- Верхняя направляющая для кнопки меню -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_menu_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.10" />
+
+    <!-- Кнопка меню -->
+    <Button
+        android:id="@+id/menuButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Menu"
+        app:layout_constraintTop_toBottomOf="@id/guideline_menu_top"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+
+    <!-- Часы над графиком -->
+    <TextClock
+        android:id="@+id/textClock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:format24Hour="HH:mm"
+        android:textSize="20sp"
+        app:layout_constraintTop_toBottomOf="@id/menuButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.3" />
+
+    <!-- Верхняя направляющая для графика -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.30" />
+
+    <!-- Нижняя направляющая для графика -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.60" />
+
+    <!-- График в центре экрана -->
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/guideline_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline_top" />
+
+    <!-- Нижняя направляющая для табличек -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_tables_top"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.70" />
+
+    <!-- Таблички Bolus, Tbolus, IOB с значениями по умолчанию 0 -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/guideline_tables_top"
+        app:layout_constraintBottom_toTopOf="@id/guideline_buttons_bottom">
+
+        <TextView
+            android:id="@+id/bolusLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bolus: "
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/bolusValue"
+            app:layout_constraintHorizontal_chainStyle="spread" />
+
+        <TextView
+            android:id="@+id/bolusValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintStart_toEndOf="@+id/bolusLabel"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tbolusLabel" />
+
+        <TextView
+            android:id="@+id/tbolusLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tbolus: "
+            app:layout_constraintStart_toEndOf="@+id/bolusValue"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/tbolusValue" />
+
+        <TextView
+            android:id="@+id/tbolusValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintStart_toEndOf="@+id/tbolusLabel"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/iobLabel" />
+
+        <TextView
+            android:id="@+id/iobLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IOB: "
+            app:layout_constraintStart_toEndOf="@+id/tbolusValue"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/iobValue" />
+
+        <TextView
+            android:id="@+id/iobValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintStart_toEndOf="@+id/iobLabel"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Нижняя направляющая для кнопок -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_buttons_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.85" />
+
+    <!-- Кнопки внизу экрана -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/guideline_buttons_bottom">
+
+        <Button
+            android:id="@+id/bgInputButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BG input" />
+
+        <Button
+            android:id="@+id/bolusCalculationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bolus calculation" />
+
+        <Button
+            android:id="@+id/forecastButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Forecast" />
+
+        <Button
+            android:id="@+id/addBolusButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add bolus" />
+
+    </LinearLayout>
+
+
+        <TextView
+            android:id="@+id/tinsulinLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tinsulin: "
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tinsulinValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintStart_toEndOf="@id/tinsulinLabel"
+            app:layout_constraintTop_toTopOf="@id/tinsulinLabel"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/targetBGLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TargetBG: "
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tinsulinLabel"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/targetBGValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintStart_toEndOf="@id/targetBGLabel"
+            app:layout_constraintTop_toTopOf="@id/targetBGLabel"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/isfLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ISF: "
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/targetBGLabel"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/isfValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0"
+            app:layout_constraintStart_toEndOf="@id/isfLabel"
+            app:layout_constraintTop_toTopOf="@id/isfLabel"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/icRatioLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="ICRatio: "
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/isfLabel"
+            android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/icRatioValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        app:layout_constraintStart_toEndOf="@id/icRatioLabel"
+        app:layout_constraintTop_toTopOf="@id/icRatioLabel"
+        android:layout_marginBottom="8dp" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
