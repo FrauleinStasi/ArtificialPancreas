@@ -228,7 +228,11 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
         // Обновляем вертикальную линию для текущего времени
         updateVerticalLine()
+
+        // Проверка условий для кнопки Forecast
+        forecastButton.isEnabled = bgValue in 3.99..12.01 && bgValue < targetBG!!
     }
+
 
 
 
@@ -380,21 +384,33 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         var pBG = bgValue
         var pIOB = iob
 
-        // Прогноз на 2 часа вперед (120 точек с интервалом 1 минута)
-        for (i in 0..120) {
+        // Прогноз на 2 часа вперед или до достижения нижней границы (3.99)
+        while (pBG > 3.99 && forecastEntries.size <= 120) {
             forecastEntries.add(Entry(time, pBG))
 
             // Расчет следующей точки
-            pBG -= isf * pIOB
             time += deltaT
-
-            // Обновленный расчет pIOB с линейным методом
             val timeSinceBolus = (time - tbolus) / (60 * 60 * 1000f) // Время с момента болюса в часах
-            pIOB = if (timeSinceBolus < tinsulin) {
-                bolus * (1 - timeSinceBolus / tinsulin)
+            if (timeSinceBolus < tinsulin) {
+                pIOB = bolus * (1 - timeSinceBolus / tinsulin)
             } else {
-                0f
+                pIOB = 0f
             }
+
+            // Уменьшение уровня глюкозы с учетом уменьшения pIOB
+            val bgDropPerMinute = isf * pIOB
+            pBG -= bgDropPerMinute * (deltaT / (60 * 60 * 1000)) // Корректный расчет для deltaT и линейного убывания IOB
+
+            // Вывод отладочной информации
+            println("Time: $time")
+            println("pBG: $pBG")
+            println("pIOB: $pIOB")
+            println("bgDropPerMinute: $bgDropPerMinute")
+        }
+
+        // Добавляем точку для нижней границы (3.99)
+        if (pBG <= 3.99) {
+            forecastEntries.add(Entry(time, 3.99f))
         }
 
         // Создаем DataSet для прогноза
@@ -406,12 +422,23 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
             enableDashedLine(10f, 10f, 0f) // Пунктирная линия
         }
 
+        // Удаляем предыдущий DataSet, если он существует
+        if (lineChart.data.dataSetCount > 1) {
+            lineChart.data.removeDataSet(1)
+        }
+
         // Добавляем DataSet с прогнозом в данные графика
         lineChart.data.addDataSet(forecastDataSet)
         lineChart.data.notifyDataChanged()
         lineChart.notifyDataSetChanged()
         lineChart.invalidate()
     }
+
+
+
+
+
+
 
 
 }
