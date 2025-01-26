@@ -12,7 +12,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.05" />
+        app:layout_constraintGuide_percent="0.10" />
 
     <!-- Левая направляющая для кнопки меню -->
     <androidx.constraintlayout.widget.Guideline
@@ -20,27 +20,29 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent="0.05" />
+        app:layout_constraintGuide_percent="0.0" />
 
-    <!-- Кнопка меню над Tinsulin -->
-    <Button
-        android:id="@+id/menuButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Меню"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/guideline_menu_top"
-        app:layout_constraintStart_toEndOf="@id/guideline_menu_left"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp" />
+    <!-- Кнопка меню -->
 
     <!-- Параметры -->
+
+    <Button
+        android:id="@+id/menuButton"
+        android:layout_width="169dp"
+        android:layout_height="36dp"
+        android:layout_marginTop="12dp"
+        android:text="Menu"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@id/guideline_menu_left"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline_menu_top" />
+
     <TextView
         android:id="@+id/tinsulinLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Время дейтсвия инсулина: "
+        android:text="Tinsulin: "
         app:layout_constraintTop_toBottomOf="@id/menuButton"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginStart="16dp"
@@ -60,7 +62,7 @@
         android:id="@+id/targetBGLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Целевой уровень ГК: "
+        android:text="TargetBG: "
         app:layout_constraintTop_toBottomOf="@id/tinsulinLabel"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginStart="16dp"
@@ -80,7 +82,7 @@
         android:id="@+id/isfLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="КЧИ: "
+        android:text="ISF: "
         app:layout_constraintTop_toBottomOf="@id/targetBGLabel"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginStart="16dp"
@@ -100,7 +102,7 @@
         android:id="@+id/icRatioLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Инсулино-углеводное соотношение: "
+        android:text="ICRatio: "
         app:layout_constraintTop_toBottomOf="@id/isfLabel"
         app:layout_constraintStart_toStartOf="parent"
         android:layout_marginStart="16dp"
@@ -123,7 +125,7 @@
         android:layout_height="wrap_content"
         android:format24Hour="HH:mm"
         android:textSize="20sp"
-        app:layout_constraintTop_toBottomOf="@id/menuButton"
+        app:layout_constraintTop_toBottomOf="@id/icRatioLabel"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.3" />
@@ -142,19 +144,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.60" />
+        app:layout_constraintGuide_percent="0.68" />
 
     <!-- График в центре экрана -->
-    <com.github.mikephil.charting.charts.LineChart
-        android:id="@+id/lineChart"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/guideline_bottom"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/guideline_top" />
 
     <!-- Нижняя направляющая для табличек -->
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/lineChart"
+        android:layout_width="405dp"
+        android:layout_height="223dp"
+        app:layout_constraintBottom_toTopOf="@id/guideline_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textClock"
+        app:layout_constraintVertical_bias="1.0" />
+
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_tables_top"
         android:layout_width="wrap_content"
@@ -243,29 +249,30 @@
 
         <Button
             android:id="@+id/bgInputButton"
-            android:layout_width="wrap_content"
+            android:layout_width="89dp"
             android:layout_height="wrap_content"
             android:text="BG input" />
 
         <Button
             android:id="@+id/bolusCalculationButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="129dp"
+            android:layout_height="match_parent"
             android:text="Bolus calculation" />
 
         <Button
             android:id="@+id/forecastButton"
-            android:layout_width="wrap_content"
+            android:layout_width="84dp"
             android:layout_height="wrap_content"
             android:text="Forecast" />
 
         <Button
             android:id="@+id/addBolusButton"
-            android:layout_width="wrap_content"
+            android:layout_width="95dp"
             android:layout_height="wrap_content"
             android:text="Add bolus" />
 
     </LinearLayout>
+
 
 
 
