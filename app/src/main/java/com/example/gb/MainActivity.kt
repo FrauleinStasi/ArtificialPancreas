@@ -377,68 +377,37 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
 
     private fun calculateForecast() {
+        // Получаем текущее время и значение BG
         val currentTime = System.currentTimeMillis().toFloat()
-        val forecastEntries = ArrayList<Entry>()
-        val deltaT = 60000f // Интервал в одну минуту (60 000 миллисекунд)
-        var time = currentTime
-        var pBG = bgValue
-        var pIOB = iob
+        var forecastBG = bgValue
+        var forecastIOB = iob
+        val deltaTime = 3600000f // Интервал времени для прогноза (1 час)
 
-        // Прогноз на 2 часа вперед или до достижения нижней границы (3.99)
-        while (pBG > 3.99 && forecastEntries.size <= 120) {
-            forecastEntries.add(Entry(time, pBG))
+        // Очистка предыдущих прогнозных точек, если таковые имеются
+        entries.removeAll { entry -> entry.data == "forecast" }
 
-            // Расчет следующей точки
-            time += deltaT
-            val timeSinceBolus = (time - tbolus) / (60 * 60 * 1000f) // Время с момента болюса в часах
-            if (timeSinceBolus < tinsulin) {
-                pIOB = bolus * (1 - timeSinceBolus / tinsulin)
-            } else {
-                pIOB = 0f
+        for (i in 1..24) { // Прогноз на 24 часа вперед
+            forecastBG = forecastBG - isf * forecastIOB
+            val forecastTime = currentTime + i * deltaTime
+
+            // Добавление прогнозной точки на график
+            val forecastEntry = Entry(forecastTime, forecastBG).apply { data = "forecast" }
+            entries.add(forecastEntry)
+
+            // Вычисление нового значения IOB
+            forecastIOB = bolus - (bolus / tinsulin) * (forecastTime - tbolus) / (60 * 60 * 1000)
+
+            if (forecastIOB < 0) {
+                forecastIOB = 0f
             }
-
-            // Уменьшение уровня глюкозы с учетом уменьшения pIOB
-            val bgDropPerMinute = isf * pIOB
-            pBG -= bgDropPerMinute * (deltaT / (60 * 60 * 1000)) // Корректный расчет для deltaT и линейного убывания IOB
-
-            // Вывод отладочной информации
-            println("Time: $time")
-            println("pBG: $pBG")
-            println("pIOB: $pIOB")
-            println("bgDropPerMinute: $bgDropPerMinute")
         }
 
-        // Добавляем точку для нижней границы (3.99)
-        if (pBG <= 3.99) {
-            forecastEntries.add(Entry(time, 3.99f))
-        }
-
-        // Создаем DataSet для прогноза
-        val forecastDataSet = LineDataSet(forecastEntries, "Forecast").apply {
-            lineWidth = 2f
-            color = Color.GREEN
-            setDrawCircles(false)
-            setDrawValues(false)
-            enableDashedLine(10f, 10f, 0f) // Пунктирная линия
-        }
-
-        // Удаляем предыдущий DataSet, если он существует
-        if (lineChart.data.dataSetCount > 1) {
-            lineChart.data.removeDataSet(1)
-        }
-
-        // Добавляем DataSet с прогнозом в данные графика
-        lineChart.data.addDataSet(forecastDataSet)
+        // Обновление графика
+        dataSet.notifyDataSetChanged()
         lineChart.data.notifyDataChanged()
         lineChart.notifyDataSetChanged()
         lineChart.invalidate()
     }
-
-
-
-
-
-
 
 
 }
