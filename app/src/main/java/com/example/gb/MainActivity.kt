@@ -169,24 +169,28 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
     private fun calculateIOB() {
         val currentTimeMillis = System.currentTimeMillis()
+        val durationInHours = tinsulin
 
-        // Проверка условий для IOB
-        if ((currentTimeMillis - tbolus) < tinsulin * 60 * 60 * 1000) { // Переводим Tinsulin в миллисекунды
+        if ((currentTimeMillis - tbolus) < durationInHours * 60 * 60 * 1000) {
             val timeSinceBolus = (currentTimeMillis - tbolus).toFloat() / (60 * 60 * 1000) // Время с момента болюса в часах
-            val insulinEffect = integrateInsulinEffect(tbolus, currentTimeMillis, bolus, tinsulin)
-            iob = bolus - insulinEffect
+            val insulinEffect = bolus * (1 - timeSinceBolus / durationInHours)
+            iob = insulinEffect
         } else {
-            iob = 10F
+            iob = 0f
         }
+
+        // Вывод значений для отладки
+        println("Current Time: $currentTimeMillis")
+        println("Tbolus: $tbolus")
+        println("Bolus: $bolus")
+        println("Tinsulin: $tinsulin")
+        println("IOB: $iob")
 
         // Обновляем значение IOB на экране
         iobValueTextView.text = String.format("%.2f", iob)
     }
 
-    private fun integrateInsulinEffect(start: Long, end: Long, bolus: Float, tinsulin: Float): Float {
-        val duration = (end - start).toFloat() / (60 * 60 * 1000) // Длительность в часах
-        return bolus * (duration / tinsulin) // Простая линейная модель
-    }
+
 
 
 
@@ -306,19 +310,17 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         bolusValueTextView.text = bolus.toString()
         tbolusValueTextView.text = currentTime
 
-        // Проверка условий для IOB
-        if (bolus < 0 && (currentTimeMillis - tbolus) < tinsulin * 60 * 60 * 1000) {  // Переводим Tinsulin в миллисекунды
-            iob = bolus - (bolus / tinsulin) * ((currentTimeMillis - tbolus) / (60 * 60 * 1000))  // Переводим разницу времени в часы
-            iobValueTextView.text = iob.toString()
-        } else {
-            iob = 0f
-            bolus = 0f
-            tbolus = 0L
-            iobValueTextView.text = iob.toString()
-        }
+        // Присваиваем текущее время переменной tbolus
+        tbolus = currentTimeMillis
+
+        // Пересчёт IOB после рассчета болюса
+        calculateIOB()
 
         Toast.makeText(this, "Bolus рассчитан: $bolus Ед", Toast.LENGTH_SHORT).show()
     }
+
+
+
 
     private fun addLimitLine(value: Float, label: String, color: Int, dashed: Boolean) {
         val limitLine = LimitLine(value, label)
@@ -385,7 +387,14 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
             // Расчет следующей точки
             pBG -= isf * pIOB
             time += deltaT
-            pIOB = bolus - integrateInsulinEffect(tbolus, time.toLong(), bolus, tinsulin)
+
+            // Обновленный расчет pIOB с линейным методом
+            val timeSinceBolus = (time - tbolus) / (60 * 60 * 1000f) // Время с момента болюса в часах
+            pIOB = if (timeSinceBolus < tinsulin) {
+                bolus * (1 - timeSinceBolus / tinsulin)
+            } else {
+                0f
+            }
         }
 
         // Создаем DataSet для прогноза
@@ -403,5 +412,6 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         lineChart.notifyDataSetChanged()
         lineChart.invalidate()
     }
+
 
 }
