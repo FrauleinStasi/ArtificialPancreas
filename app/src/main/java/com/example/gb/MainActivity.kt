@@ -386,19 +386,39 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         // Очистка предыдущих прогнозных точек, если таковые имеются
         entries.removeAll { entry -> entry.data == "forecast" }
 
+        var timeTo3_99: Long? = null
+        var stopForecast = false
+
         for (i in 1..24) { // Прогноз на 24 часа вперед
-            forecastBG = forecastBG - isf * forecastIOB
-            val forecastTime = currentTime + i * deltaTime
+            if (!stopForecast) {
+                forecastBG = forecastBG - isf * forecastIOB
+                val forecastTime = currentTime + i * deltaTime
 
-            // Добавление прогнозной точки на график
-            val forecastEntry = Entry(forecastTime, forecastBG).apply { data = "forecast" }
-            entries.add(forecastEntry)
+                // Проверка на достижение значения 3.99
+                if (forecastBG <= 3.99 && timeTo3_99 == null) {
+                    timeTo3_99 = forecastTime.toLong()
+                    val timeDifference = timeTo3_99 - currentTime.toLong()
+                    val hours = timeDifference / 3600000
+                    val minutes = (timeDifference % 3600000) / 60000
+                    println("Время до достижения значения 3.99: $hours часов и $minutes минут")
 
-            // Вычисление нового значения IOB
-            forecastIOB = bolus - (bolus / tinsulin) * (forecastTime - tbolus) / (60 * 60 * 1000)
+                    // Обновление TextView для отображения оставшегося времени до гипогликемии
+                    val hypoglycemiaTimeTextView = findViewById<TextView>(R.id.hypoglycemiaTimeTextView)
+                    hypoglycemiaTimeTextView.text = "Возможно появление гипогликемии через: $hours часов и $minutes минут"
 
-            if (forecastIOB < 0) {
-                forecastIOB = 0f
+                    stopForecast = true
+                }
+
+                // Добавление прогнозной точки на график
+                val forecastEntry = Entry(forecastTime, forecastBG).apply { data = "forecast" }
+                entries.add(forecastEntry)
+
+                // Вычисление нового значения IOB
+                forecastIOB = bolus - (bolus / tinsulin) * (forecastTime - tbolus) / (60 * 60 * 1000)
+
+                if (forecastIOB < 0) {
+                    forecastIOB = 0f
+                }
             }
         }
 
@@ -406,6 +426,19 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         dataSet.notifyDataSetChanged()
         lineChart.data.notifyDataChanged()
         lineChart.notifyDataSetChanged()
+        lineChart.invalidate()
+
+        // Настройка прогнозной линии как пунктирной
+        val forecastDataSet = LineDataSet(entries.filter { it.data == "forecast" }, "Forecast")
+        forecastDataSet.lineWidth = 2f
+        forecastDataSet.color = Color.GRAY
+        forecastDataSet.enableDashedLine(10f, 10f, 0f)
+        forecastDataSet.setDrawCircles(false)
+        forecastDataSet.setDrawValues(false)
+
+        // Добавление прогнозного набора данных к графику
+        val lineData = lineChart.data
+        lineData.addDataSet(forecastDataSet)
         lineChart.invalidate()
     }
 

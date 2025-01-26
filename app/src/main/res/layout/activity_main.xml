@@ -12,122 +12,33 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.10" />
-
-    <!-- Левая направляющая для кнопки меню -->
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline_menu_left"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
         app:layout_constraintGuide_percent="0.0" />
 
     <!-- Кнопка меню -->
 
-    <!-- Параметры -->
+
+    <!-- Часы над графиком -->
 
     <Button
         android:id="@+id/menuButton"
-        android:layout_width="169dp"
-        android:layout_height="36dp"
-        android:layout_marginTop="12dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="168dp"
         android:text="Menu"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toEndOf="@id/guideline_menu_left"
+        app:layout_constraintHorizontal_bias="0.012"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/guideline_menu_top" />
 
-    <TextView
-        android:id="@+id/tinsulinLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Tinsulin: "
-        app:layout_constraintTop_toBottomOf="@id/menuButton"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:id="@+id/tinsulinValue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        app:layout_constraintTop_toBottomOf="@id/menuButton"
-        app:layout_constraintStart_toEndOf="@id/tinsulinLabel"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:id="@+id/targetBGLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TargetBG: "
-        app:layout_constraintTop_toBottomOf="@id/tinsulinLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:id="@+id/targetBGValue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        app:layout_constraintTop_toBottomOf="@id/tinsulinLabel"
-        app:layout_constraintStart_toEndOf="@id/targetBGLabel"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:id="@+id/isfLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ISF: "
-        app:layout_constraintTop_toBottomOf="@id/targetBGLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:id="@+id/isfValue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        app:layout_constraintTop_toBottomOf="@id/targetBGLabel"
-        app:layout_constraintStart_toEndOf="@id/isfLabel"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:id="@+id/icRatioLabel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="ICRatio: "
-        app:layout_constraintTop_toBottomOf="@id/isfLabel"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp" />
-
-    <TextView
-        android:id="@+id/icRatioValue"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        app:layout_constraintTop_toBottomOf="@id/isfLabel"
-        app:layout_constraintStart_toEndOf="@id/icRatioLabel"
-        android:layout_marginStart="8dp"
-        android:layout_marginTop="8dp" />
-
-    <!-- Часы над графиком -->
     <TextClock
         android:id="@+id/textClock"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:format24Hour="HH:mm"
         android:textSize="20sp"
-        app:layout_constraintTop_toBottomOf="@id/icRatioLabel"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/menuButton"
         app:layout_constraintVertical_bias="0.3" />
 
     <!-- Верхняя направляющая для графика -->
@@ -136,7 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.30" />
+        app:layout_constraintGuide_percent="0.31" />
 
     <!-- Нижняя направляющая для графика -->
     <androidx.constraintlayout.widget.Guideline
@@ -144,23 +55,36 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.68" />
+        app:layout_constraintGuide_percent="0.60" />
 
     <!-- График в центре экрана -->
 
-    <!-- Нижняя направляющая для табличек -->
 
+    <!-- TextView для отображения оставшегося времени до гипогликемии -->
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/lineChart"
-        android:layout_width="405dp"
-        android:layout_height="223dp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/guideline_bottom"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textClock"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintTop_toBottomOf="@id/guideline_top"
+        app:layout_constraintVertical_bias="0.0" />
 
+    <TextView
+        android:id="@+id/hypoglycemiaTimeTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textColor="@android:color/holo_red_dark"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@id/guideline_buttons_bottom"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lineChart" />
+
+    <!-- Нижняя направляющая для табличек -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_tables_top"
         android:layout_width="wrap_content"
@@ -172,63 +96,63 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toBottomOf="@id/guideline_tables_top"
-        app:layout_constraintBottom_toTopOf="@id/guideline_buttons_bottom">
+        app:layout_constraintBottom_toTopOf="@id/guideline_buttons_bottom"
+        app:layout_constraintTop_toBottomOf="@id/guideline_tables_top">
 
         <TextView
             android:id="@+id/bolusLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Bolus: "
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/bolusValue"
-            app:layout_constraintHorizontal_chainStyle="spread" />
+            app:layout_constraintHorizontal_chainStyle="spread"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/bolusValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0"
+            app:layout_constraintEnd_toStartOf="@+id/tbolusLabel"
             app:layout_constraintStart_toEndOf="@+id/bolusLabel"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/tbolusLabel" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tbolusLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Tbolus: "
+            app:layout_constraintEnd_toStartOf="@+id/tbolusValue"
             app:layout_constraintStart_toEndOf="@+id/bolusValue"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/tbolusValue" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/tbolusValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0"
+            app:layout_constraintEnd_toStartOf="@+id/iobLabel"
             app:layout_constraintStart_toEndOf="@+id/tbolusLabel"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/iobLabel" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/iobLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="IOB: "
+            app:layout_constraintEnd_toStartOf="@+id/iobValue"
             app:layout_constraintStart_toEndOf="@+id/tbolusValue"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/iobValue" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/iobValue"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="0"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/iobLabel"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <!-- Нижняя направляющая для кнопок -->
@@ -237,43 +161,133 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.85" />
+        app:layout_constraintGuide_percent="0.82" />
 
     <!-- Кнопки внизу экрана -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
         android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@id/guideline_buttons_bottom">
 
         <Button
             android:id="@+id/bgInputButton"
-            android:layout_width="89dp"
+            android:layout_width="91dp"
             android:layout_height="wrap_content"
             android:text="BG input" />
 
         <Button
             android:id="@+id/bolusCalculationButton"
-            android:layout_width="129dp"
-            android:layout_height="match_parent"
+            android:layout_width="127dp"
+            android:layout_height="wrap_content"
             android:text="Bolus calculation" />
 
         <Button
             android:id="@+id/forecastButton"
-            android:layout_width="84dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Forecast" />
 
         <Button
             android:id="@+id/addBolusButton"
-            android:layout_width="95dp"
+            android:layout_width="84dp"
             android:layout_height="wrap_content"
             android:text="Add bolus" />
+
 
     </LinearLayout>
 
 
+    <TextView
+        android:id="@+id/icRatioLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:text="ICRatio: "
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/isfLabel" />
+
+    <TextView
+        android:id="@+id/targetBGLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:text="TargetBG: "
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tinsulinLabel" />
+
+    <TextView
+        android:id="@+id/tinsulinValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:text="0"
+        app:layout_constraintStart_toEndOf="@id/tinsulinLabel"
+        app:layout_constraintTop_toTopOf="@id/tinsulinLabel" />
+
+    <TextView
+        android:id="@+id/tinsulinLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="64dp"
+        android:text="Tinsulin: "
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/isfLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:text="ISF: "
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/targetBGLabel" />
+
+    <TextView
+        android:id="@+id/targetBGValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:text="0"
+        app:layout_constraintStart_toEndOf="@id/targetBGLabel"
+        app:layout_constraintTop_toTopOf="@id/targetBGLabel" />
+
+    <TextView
+        android:id="@+id/isfValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:text="0"
+        app:layout_constraintStart_toEndOf="@id/isfLabel"
+        app:layout_constraintTop_toTopOf="@id/isfLabel" />
+
+    <TextView
+        android:id="@+id/icRatioValue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="4dp"
+        android:text="0"
+        app:layout_constraintStart_toEndOf="@id/icRatioLabel"
+        app:layout_constraintTop_toTopOf="@id/icRatioLabel" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/group2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/group3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
