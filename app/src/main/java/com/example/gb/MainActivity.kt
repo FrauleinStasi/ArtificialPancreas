@@ -29,6 +29,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
     private var iob: Float = 0f
     private var bolus: Float = 0f
     private var tbolus: Long = 0L
+    private var carbs: Float? = null
 
     private lateinit var lineChart: LineChart
     private lateinit var entries: ArrayList<Entry>
@@ -199,6 +200,9 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         bgValue = input
         Toast.makeText(this, "Значение BG: $bgValue ммоль/л", Toast.LENGTH_SHORT).show()
 
+        // Удаляем все прогнозные точки, если таковые имеются
+        entries.removeAll { entry -> entry.data == "forecast" }
+
         // Получаем текущее время в миллисекундах
         val currentTime = System.currentTimeMillis().toFloat()
 
@@ -230,9 +234,8 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         updateVerticalLine()
 
         // Проверка условий для кнопки Forecast
-        forecastButton.isEnabled = bgValue in 3.99..12.01 && bgValue < targetBG!!
+        checkForecastButton()
     }
-
 
 
 
@@ -303,6 +306,8 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
 
     override fun onBolusCalculation(carbs: Float, bg: Float) {
+        this.carbs = carbs  // Сохраняем значение carbs
+
         // Расчет болюса
         bolus = (bg - (targetBG ?: 0f)) / isf + carbs / icRatio - iob
 
@@ -321,12 +326,18 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         calculateIOB()
 
         Toast.makeText(this, "Bolus рассчитан: $bolus Ед", Toast.LENGTH_SHORT).show()
+
+        // Проверка условий для кнопки Forecast
+        checkForecastButton()
+    }
+    private fun checkForecastButton() {
+        forecastButton.isEnabled = bgValue in 3.99..12.01 && bgValue < targetBG!! && carbs != null
     }
 
 
 
 
-    private fun addLimitLine(value: Float, label: String, color: Int, dashed: Boolean) {
+        private fun addLimitLine(value: Float, label: String, color: Int, dashed: Boolean) {
         val limitLine = LimitLine(value, label)
         limitLine.lineWidth = 2f
         limitLine.lineColor = color

@@ -12,45 +12,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Gb"
         tools:targetApi="31">
-        <activity
-            android:name=".BolusCalculationDialogFragment"
-            android:exported="true"
-            android:label="@string/title_activity_bolus_calculation_dialog_fragment"
-            android:theme="@style/Theme.Gb">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".BGInputDialogFragment"
-            android:exported="true"
-            android:label="@string/title_activity_bginput_dialog_fragment"
-            android:theme="@style/Theme.Gb">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        <activity
-            android:name=".ParameterInputDialogFragment"
-            android:exported="true"
-            android:label="@string/title_activity_parameter_input_dialog_fragment"
-            android:theme="@style/Theme.Gb">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
