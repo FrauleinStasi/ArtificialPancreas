@@ -1,5 +1,6 @@
 package com.example.gb
 
+import DoubleTapGestureListener
 import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
@@ -18,6 +19,10 @@ import android.widget.TextClock
 import android.widget.TextView
 import java.text.SimpleDateFormat
 import java.util.*
+
+import android.view.MotionEvent
+import com.github.mikephil.charting.listener.OnChartGestureListener
+import com.github.mikephil.charting.listener.ChartTouchListener
 
 class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener, ParameterInputDialogFragment.ParameterInputListener, BolusCalculationDialogFragment.BolusCalculationListener {
 
@@ -55,15 +60,22 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
     private var prevIsf: Float? = null
     private var prevIcRatio: Float? = null
 
+    private var lastBGInputTime: Long = 0L
+
     // Определяем переменную dateFormat
     private val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Инициализация LineChart и других элементов...
         lineChart = findViewById(R.id.lineChart)
         entries = ArrayList()
+
+        // Устанавливаем собственный обработчик жестов для графика
+        lineChart.onChartGestureListener = DoubleTapGestureListener(lineChart,entries)
 
         textClock = findViewById(R.id.textClock)
 
@@ -197,17 +209,28 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
 
     override fun onBGInput(input: Float) {
+        val currentTime = System.currentTimeMillis()
+
+        // Проверка времени последнего ввода
+        if (currentTime - lastBGInputTime < 60000) { // 60000 миллисекунд = 1 минута
+            Toast.makeText(this, "Нельзя заносить значение ГК чаще, чем раз в минуту", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         bgValue = input
+        lastBGInputTime = currentTime // Обновляем время последнего ввода
+
         Toast.makeText(this, "Значение BG: $bgValue ммоль/л", Toast.LENGTH_SHORT).show()
 
-        // Удаляем все прогнозные точки, если таковые имеются
+        // Удаляем все прогнозные точки и наборы данных, если таковые имеются
         entries.removeAll { entry -> entry.data == "forecast" }
+        lineChart.data.removeDataSet(lineChart.data.getDataSetByLabel("Forecast", true))
 
         // Получаем текущее время в миллисекундах
-        val currentTime = System.currentTimeMillis().toFloat()
+        val currentTimeFloat = currentTime.toFloat()
 
         // Добавляем новое значение на график
-        val newEntry = Entry(currentTime, bgValue)
+        val newEntry = Entry(currentTimeFloat, bgValue)
         entries.add(newEntry)
 
         // Устанавливаем описание для каждой точки
@@ -226,7 +249,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
 
         // Устанавливаем видимый диапазон так, чтобы текущая точка была в центре
         lineChart.setVisibleXRangeMaximum(3600000f) // Отображаем 2 часа по оси X
-        lineChart.moveViewToX(currentTime - 3600000f) // Смещаем график так, чтобы текущая точка была в центре
+        lineChart.moveViewToX(currentTimeFloat - 3600000f) // Смещаем график так, чтобы текущая точка была в центре
 
         lineChart.invalidate() // Перерисовываем график
 
@@ -236,6 +259,8 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         // Проверка условий для кнопки Forecast
         checkForecastButton()
     }
+
+
 
 
 
@@ -392,44 +417,38 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         val currentTime = System.currentTimeMillis().toFloat()
         var forecastBG = bgValue
         var forecastIOB = iob
-        val deltaTime = 3600000f // Интервал времени для прогноза (1 час)
+        val deltaTime = 1800000f // Интервал времени для прогноза (30 минут)
 
         // Очистка предыдущих прогнозных точек, если таковые имеются
         entries.removeAll { entry -> entry.data == "forecast" }
 
-        var timeTo3_99: Long? = null
         var stopForecast = false
 
-        for (i in 1..24) { // Прогноз на 24 часа вперед
-            if (!stopForecast) {
-                forecastBG = forecastBG - isf * forecastIOB
-                val forecastTime = currentTime + i * deltaTime
+        for (i in 1..48) { // Прогноз на 24 часа вперед (48 интервалов по 30 минут)
+            val forecastTime = currentTime + i * deltaTime
 
-                // Проверка на достижение значения 3.99
-                if (forecastBG <= 3.99 && timeTo3_99 == null) {
-                    timeTo3_99 = forecastTime.toLong()
-                    val timeDifference = timeTo3_99 - currentTime.toLong()
-                    val hours = timeDifference / 3600000
-                    val minutes = (timeDifference % 3600000) / 60000
-                    println("Время до достижения значения 3.99: $hours часов и $minutes минут")
+            // Добавление прогнозной точки на график
+            val forecastEntry = Entry(forecastTime, forecastBG).apply { data = "forecast" }
+            entries.add(forecastEntry)
 
-                    // Обновление TextView для отображения оставшегося времени до гипогликемии
-                    val hypoglycemiaTimeTextView = findViewById<TextView>(R.id.hypoglycemiaTimeTextView)
-                    hypoglycemiaTimeTextView.text = "Возможно появление гипогликемии через: $hours часов и $minutes минут"
+            // Проверка на достижение значения 4 ммоль/л или ниже
+            if (forecastBG <= 4f) {
+                stopForecast = true
+                val timeDifference = forecastTime - currentTime
+                val hours = (timeDifference / 3600000).toInt()
+                val minutes = ((timeDifference % 3600000) / 60000).toInt()
+                val hypoglycemiaMessage = "Возможно появление гипогликемии через: $hours часов и $minutes минут"
+                findViewById<TextView>(R.id.hypoglycemiaTimeTextView).text = hypoglycemiaMessage
+                break
+            }
 
-                    stopForecast = true
-                }
+            // Вычисление нового значения BG и IOB
+            forecastBG = forecastBG - isf * forecastIOB
+            if (forecastBG < 4f) forecastBG = 4f // Удерживаем значение не ниже 4 ммоль/л
+            forecastIOB = bolus - (bolus / tinsulin) * (forecastTime - tbolus) / (60 * 60 * 1000)
 
-                // Добавление прогнозной точки на график
-                val forecastEntry = Entry(forecastTime, forecastBG).apply { data = "forecast" }
-                entries.add(forecastEntry)
-
-                // Вычисление нового значения IOB
-                forecastIOB = bolus - (bolus / tinsulin) * (forecastTime - tbolus) / (60 * 60 * 1000)
-
-                if (forecastIOB < 0) {
-                    forecastIOB = 0f
-                }
+            if (forecastIOB < 0) {
+                forecastIOB = 0f
             }
         }
 
