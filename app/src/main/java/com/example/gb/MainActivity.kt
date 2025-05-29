@@ -18,7 +18,6 @@ import com.github.mikephil.charting.formatter.ValueFormatter
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.max
-import com.example.gb.R
 
 class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
     ParameterInputDialogFragment.ParameterInputListener,
@@ -53,13 +52,13 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
     private lateinit var handler: Handler
     private lateinit var iobRunnable: Runnable
     private lateinit var daySimulator: DaySimulator
-
-    private var bolusValue: Float = 0f  // или TextView, в зависимости от контекста
+    private lateinit var autoPilot: AutoPilotSimulator
 
     private val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     // endregion
 
     data class MealEvent(val timeMin: Int, val carbs: Float, val bolus: Float)
+
     // region Lifecycle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,11 +69,13 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         setupButtons()
         setupIOBCalculation()
         initSimulator()
+        autoPilot = AutoPilotSimulator(this)
     }
 
     override fun onDestroy() {
         handler.removeCallbacks(iobRunnable)
         daySimulator.stop()
+        autoPilot.stopAutoPilot()
         super.onDestroy()
     }
     // endregion
@@ -159,15 +160,15 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         }
 
         findViewById<Button>(R.id.startSimulation).setOnClickListener {
-            if (allParametersEntered()) {
-                daySimulator.start()
+            if (::autoPilot.isInitialized) {
+                autoPilot.startAutoPilot()
             } else {
-                Toast.makeText(this, "Введите все параметры", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Ошибка инициализации эмулятора", Toast.LENGTH_SHORT).show()
             }
         }
 
         findViewById<Button>(R.id.stopSimulation).setOnClickListener {
-            daySimulator.stop()
+            autoPilot.stopAutoPilot()
         }
     }
 
@@ -255,7 +256,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
             })
 
             if (forecastBG <= 4f) {
-                showHypoglycemiaWarning(i * 30)  // Убрано minutes:
+                showHypoglycemiaWarning(i * 30)
                 break
             }
         }
@@ -313,7 +314,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         updateParameterViews()
         addTargetBGLines()
         checkForecastButton()
-        initSimulator() // Reinitialize simulator with new parameters
+        initSimulator()
     }
 
     override fun onBolusCalculation(carbs: Float, bg: Float) {
@@ -326,16 +327,14 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         calculateIOB()
         checkForecastButton()
     }
-
-// endregion
+    // endregion
 
     // region Helpers
-// region Helpers
-    private fun updateParameterViews() {
-        findViewById<TextView>(R.id.tinsulinValue).text = tinsulin.toString()
-        findViewById<TextView>(R.id.targetBGValue).text = targetBG.toString()
-        findViewById<TextView>(R.id.isfValue).text = isf.toString()
-        findViewById<TextView>(R.id.icRatioValue).text = icRatio.toString()
+    fun updateParameterViews() {
+        findViewById<TextView>(R.id.tinsulinValue).text = "%.1f".format(tinsulin)
+        findViewById<TextView>(R.id.targetBGValue).text = "%.1f".format(targetBG ?: 0f)
+        findViewById<TextView>(R.id.isfValue).text = "%.1f".format(isf)
+        findViewById<TextView>(R.id.icRatioValue).text = "%.1f".format(icRatio)
     }
 
     private fun addTargetBGLines() {
@@ -355,7 +354,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         }
     }
 
-    private fun checkForecastButton() {
+    fun checkForecastButton() {
         forecastButton.isEnabled = bgValue > 0 && targetBG != null && carbs != null &&
                 bgValue < (targetBG ?: 0f) && bgValue > 3.9f
     }
@@ -364,7 +363,7 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         return targetBG != null && isf > 0 && icRatio > 0
     }
     // endregion
-
+    data class BolusRecord(val time: Long, val amount: Float)
     // region Simulator
     inner class DaySimulator(
         private val activity: MainActivity,
@@ -375,15 +374,34 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         private val tinsulin: Float
     ) {
         private val handler = Handler(Looper.getMainLooper())
-        private var iob = 0f
+        private val bolusHistory = mutableListOf<BolusRecord>()
         private var timeMinutes = 0
         var isRunning = false
             private set
         private val mealEvents = mutableListOf<MealEvent>()
 
 
+
         fun addMeal(timeMin: Int, carbs: Float, bolus: Float) {
             mealEvents.add(MealEvent(timeMin, carbs, bolus))
+        }
+
+        private fun calculateIOB(currentTime: Long, bolusTime: Long, bolusAmount: Float, tInsulin: Float): Float {
+            if (bolusTime == 0L) return 0f
+
+            val hoursSinceBolus = (currentTime - bolusTime).toFloat() / (60 * 60 * 1000)
+            return if (hoursSinceBolus < tInsulin) {
+                max(bolusAmount * (1 - hoursSinceBolus / tInsulin), 0f)
+            } else {
+                0f
+            }
+        }
+
+        private fun calculateTotalIOB(): Float {
+            val currentTime = System.currentTimeMillis()
+            return bolusHistory.sumOf {
+                calculateIOB(currentTime, it.time, it.amount, tinsulin).toDouble()
+            }.toFloat()
         }
 
         fun start() {
@@ -414,31 +432,33 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
                 } else {
                     stop()
                 }
-            }, 500) // 0.5 сек = 5 мин
+            }, 500)
         }
 
         private fun processMeals() {
             mealEvents.firstOrNull { it.timeMin == timeMinutes }?.let { meal ->
                 currentBG += meal.carbs / icRatio * 10
-                iob += meal.bolus
-                activity.addDiamondMarkerToChart(System.currentTimeMillis().toFloat())
-                showToast("Прием пищи: ${meal.carbs} углеводов")
+                val bolusTime = System.currentTimeMillis()
+                bolusHistory.add(BolusRecord(bolusTime, meal.bolus))
+                activity.addDiamondMarkerToChart(bolusTime.toFloat())
+                showToast("Прием пищи: ${meal.carbs} углеводов, болюс: ${meal.bolus} ЕД")
             }
         }
 
         private fun simulateBasal() {
             currentBG -= 0.2f
-            iob = max(iob - 0.05f, 0f)
         }
 
         private fun calculateMicroBolus() {
             if (timeMinutes % 15 != 0) return
 
+            val currentIOB = calculateTotalIOB()
             val error = currentBG - targetBG
-            val correction = max(error / isf - iob, 0f)
+            val correction = max(error / isf - currentIOB, 0f)
 
             if (correction > 0.1f) {
-                iob += correction
+                val bolusTime = System.currentTimeMillis()
+                bolusHistory.add(BolusRecord(bolusTime, correction))
                 showToast("Микроболюс: ${"%.2f".format(correction)}")
             }
 
@@ -447,10 +467,11 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         }
 
         private fun updateUI() {
+            val currentIOB = calculateTotalIOB()
             activity.runOnUiThread {
                 activity.currentTimeTextView.text =
                     "${timeMinutes / 60}:${"%02d".format(timeMinutes % 60)}"
-                activity.iobTextView.text = "%.2f".format(iob)
+                activity.iobTextView.text = "%.2f".format(currentIOB)
                 activity.onBGInput(currentBG)
             }
         }
@@ -465,6 +486,90 @@ class MainActivity : AppCompatActivity(), BGInputDialogFragment.BGInputListener,
         private fun showToast(message: String) {
             activity.runOnUiThread {
                 Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    inner class AutoPilotSimulator(
+        private val activity: MainActivity
+    ) {
+        private val handler = Handler(Looper.getMainLooper())
+        private var isRunning = false
+        private var currentTime = 0
+
+        private val presetParams = mapOf(
+            "tinsulin" to 4f,
+            "targetBG" to 6f,
+            "isf" to 2.5f,
+            "icRatio" to 12f
+        )
+
+        private val mealSchedule = listOf(
+            MealEvent(7*60, 60f, 5f),
+            MealEvent(13*60, 80f, 6f),
+            MealEvent(19*60, 50f, 4f)
+        )
+
+        fun startAutoPilot() {
+            if (isRunning) return
+
+            activity.runOnUiThread {
+                activity.tinsulin = presetParams["tinsulin"] ?: 4f
+                activity.targetBG = presetParams["targetBG"] ?: 6f
+                activity.isf = presetParams["isf"] ?: 2.5f
+                activity.icRatio = presetParams["icRatio"] ?: 12f
+
+                activity.updateParameterViews()
+                activity.addTargetBGLines()
+                activity.checkForecastButton()
+
+                activity.bgValue = 6f
+                activity.onBGInput(activity.bgValue)
+
+                activity.iob = 0f
+                activity.iobTextView.text = "0.00"
+
+                Toast.makeText(activity,
+                    "Автоэмулятор запущен\n" +
+                            "Цель: ${activity.targetBG} ммоль/л\n" +
+                            "Чувствительность: ${activity.isf}",
+                    Toast.LENGTH_LONG).show()
+            }
+
+            isRunning = true
+            currentTime = 0
+            scheduleNextStep()
+        }
+
+        private fun scheduleNextStep() {
+            handler.postDelayed({
+                if (!isRunning) return@postDelayed
+
+                currentTime += 5
+
+                mealSchedule.firstOrNull { it.timeMin == currentTime }?.let { meal ->
+                    activity.onBolusCalculation(meal.carbs, activity.bgValue)
+                    activity.addDiamondMarkerToChart(System.currentTimeMillis().toFloat())
+                }
+
+                activity.runOnUiThread {
+                    activity.findViewById<TextView>(R.id.currentTime).text =
+                        "${currentTime/60}:${"%02d".format(currentTime%60)}"
+                }
+
+                if (currentTime < 24*60) {
+                    scheduleNextStep()
+                } else {
+                    stopAutoPilot()
+                }
+            }, 300)
+        }
+
+        fun stopAutoPilot() {
+            isRunning = false
+            handler.removeCallbacksAndMessages(null)
+            activity.runOnUiThread {
+                Toast.makeText(activity, "Эмуляция завершена", Toast.LENGTH_SHORT).show()
             }
         }
     }
