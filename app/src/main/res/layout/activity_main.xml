@@ -124,8 +124,7 @@
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/lineChart"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
-            android:layout_marginTop="16dp"/>
+            android:layout_height="300dp"/>
 
         <!-- Основные функции -->
         <Button
